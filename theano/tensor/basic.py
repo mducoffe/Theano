@@ -5492,7 +5492,7 @@ class AllocEmpty(gof.Op):
         nd = len(shps)
         str = "int dims[%(nd)s];\n" % locals()
         for idx, sh in enumerate(shps):
-            str += "dims[%(idx)s] =" +
+            str += "dims[%(idx)s] =" \
                     "PyInt_AsLong((PyObject*)%(sh)s);\n" % locals()
         # Validate that the output storage exists
         str += "if(%(out)s==NULL\n" % locals()
@@ -5525,5 +5525,3 @@ class AllocEmpty(gof.Op):
 
     def do_constant_folding(self, node):
         return False
-
-alloc_empty = AllocEmpty()
