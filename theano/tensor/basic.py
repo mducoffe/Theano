@@ -5465,7 +5465,7 @@ class AllocEmpty(gof.Op):
             except tensor.NotScalarConstantError:
                 const_shp = None
             bcast.append(numpy.all(1 == const_shp))
-        otype = tensor.TensorType(dtype='float32', broadcastable=bcast)
+        otype = tensor.TensorType(dtype=self.dtype, broadcastable=bcast)
         output = otype()
         return sh, output
 
@@ -5479,7 +5479,7 @@ class AllocEmpty(gof.Op):
         sh = tuple([int(i) for i in inputs])
         if out[0] is None or out[0].shape != sh:
             # XXX: We could implement and call CudaNdarray.empty(sh) instead.
-            out[0] = numpy.zeros(sh)
+            out[0] = numpy.empty(sh)
 
     def do_merge(self, node):
         return False
