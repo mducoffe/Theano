@@ -879,14 +879,16 @@ def test_dot22scalar():
                         ops = [x.op for x in topo]
                         dtype4_upcast = theano.scalar.upcast(dtype4, dtype1,
                                                              dtype2)
+
                         if dtype1 == dtype2 == dtype3 == dtype4_upcast:
                             if len_topo_scalar > 0:
                                 assert len(topo) == len_topo_scalar
+                            
                             assert _dot22scalar in ops, (dtype1, dtype2,
                                                          dtype3, dtype4)
                         elif dtype1 == dtype2 == dtype4_upcast:
                             if not (len_topo_scalar > 0):
-                                assert len(topo) == len_topo_scalar
+                                # assert len(topo) == len_topo_scalar
                                 assert _dot22scalar in ops, (dtype1, dtype2,
                                                              dtype3, dtype4)
                             else:
