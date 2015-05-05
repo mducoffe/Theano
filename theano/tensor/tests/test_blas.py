@@ -877,27 +877,30 @@ def test_dot22scalar():
                     def check_dot22scalar(func, len_topo_scalar=-1):
                         topo = func.maker.fgraph.toposort()
                         ops = [x.op for x in topo]
+                        classes = [type(x.op) for x in topo]
                         dtype4_upcast = theano.scalar.upcast(dtype4, dtype1,
                                                              dtype2)
 
                         if dtype1 == dtype2 == dtype3 == dtype4_upcast:
                             if len_topo_scalar > 0:
                                 assert len(topo) == len_topo_scalar
-                            
-                            assert _dot22scalar in ops, (dtype1, dtype2,
+
+                            assert gemm_inplace in ops, (dtype1, dtype2,
                                                          dtype3, dtype4)
                         elif dtype1 == dtype2 == dtype4_upcast:
                             if not (len_topo_scalar > 0):
-                                # assert len(topo) == len_topo_scalar
-                                assert _dot22scalar in ops, (dtype1, dtype2,
+                                assert len(topo) == len_topo_scalar
+                                assert gemm_inplace in ops, (dtype1, dtype2,
                                                              dtype3, dtype4)
+                                assert not T.Elemwise in classes, (
+                                    dtype1, dtype2, dtype3, dtype4)
                             else:
                                 # Currently there is a problem of
                                 # optimization order The constant get
                                 # upcasted to float64 before we try to
                                 # merge it with the dot22 of
                                 # float32. So this prevent the merge.
-                                assert _dot22scalar in ops or _dot22 in ops, (
+                                assert gemm_inplace in ops or _dot22 in ops, (
                                     dtype1, dtype2, dtype3, dtype4)
 
                         elif dtype1 == dtype2:
@@ -926,7 +929,7 @@ def test_dot22scalar():
                                                 cst * c * T.dot(a, b),
                                                 mode=mode_blas_opt)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar(f, 5)
 
                             f(av, bv, cv)
 
@@ -934,7 +937,7 @@ def test_dot22scalar():
                                             c * cst * T.dot(a, b),
                                             mode=mode_blas_opt)
                         topo = f.maker.fgraph.toposort()
-                        check_dot22scalar(f, 2)
+                        check_dot22scalar(f, 5)
                         f(av, bv, cv)
 
                         # Here, canonicalize also seems needed
@@ -944,7 +947,7 @@ def test_dot22scalar():
                                             cst2 * c * cst * T.dot(a, b),
                                             mode=m2)
                         topo = f.maker.fgraph.toposort()
-                        check_dot22scalar(f, 2)
+                        check_dot22scalar(f, 5)
                         f(av, bv, cv)
 
                         if dtype1 == dtype2 == dtype3:
@@ -952,7 +955,7 @@ def test_dot22scalar():
                                                 c * cst * a * T.dot(a, b),
                                                 mode=m2)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar(f, 5)
                             f(sv, sv, sv)
 
                             f = theano.function([a, b, c],
@@ -975,7 +978,7 @@ def test_dot22scalar():
                                                 c * a * cst * T.dot(a, b),
                                                 mode=m2)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar(f, 5)
                             f(sv, sv, sv)
 
                     cmp((3, 4), (4, 5), (3, 5))
@@ -995,7 +998,7 @@ def test_dot22scalar_cast():
     for scalar_int_type in T.int_dtypes:
         y = T.scalar(dtype=scalar_int_type)
         f = theano.function([A, y], T.dot(A, A) * y, mode=mode_blas_opt)
-        assert _dot22scalar in [x.op for x in f.maker.fgraph.toposort()]
+        assert gemm_inplace in [x.op for x in f.maker.fgraph.toposort()]
     A = T.fmatrix()
     for scalar_int_type in T.int_dtypes:
         y = T.scalar(dtype=scalar_int_type)
@@ -1003,7 +1006,7 @@ def test_dot22scalar_cast():
         if scalar_int_type in ['int32', 'int64']:
             assert _dot22 in [x.op for x in f.maker.fgraph.toposort()]
         else:
-            assert _dot22scalar in [x.op for x in f.maker.fgraph.toposort()]
+            assert gemm_inplace in [x.op for x in f.maker.fgraph.toposort()]
 
 
 def test_local_dot22_to_dot22scalar():
